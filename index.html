@@ -17,7 +17,20 @@ header {
   color: white;
   padding: 15px;
   text-align: center;
-  font-size: 20px;
+  position: relative;
+}
+
+.settings-btn {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  background: white;
+  color: #d81b60;
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-weight: bold;
 }
 
 .container {
@@ -68,6 +81,11 @@ button {
   font-weight: bold;
   font-size: 18px;
 }
+
+.admin {
+  display: none;
+  border: 2px dashed #d81b60;
+}
 </style>
 </head>
 
@@ -75,18 +93,20 @@ button {
 
 <header>
 ☕ Cafeteira Lá de Casa
+<button class="settings-btn" onclick="toggleAdmin()">⚙</button>
 </header>
 
 <div class="container">
 
 <!-- ADMIN -->
-<div class="box">
-<h3>Admin - Produtos</h3>
+<div class="box admin" id="adminBox">
+<h3>⚙ Painel Admin</h3>
 
 <input id="nome" placeholder="Nome do produto">
 <input id="preco" placeholder="Preço">
+<input id="estoque" placeholder="Estoque inicial">
 
-<button onclick="addProduto()">Adicionar Produto (estoque 10)</button>
+<button onclick="addProduto()">Adicionar / Atualizar Produto</button>
 
 <div id="listaAdmin"></div>
 </div>
@@ -119,6 +139,11 @@ function salvar() {
   localStorage.setItem("produtos", JSON.stringify(produtos));
 }
 
+function toggleAdmin() {
+  let admin = document.getElementById("adminBox");
+  admin.style.display = admin.style.display === "none" ? "block" : "none";
+}
+
 function render() {
 
   // ADMIN
@@ -126,7 +151,8 @@ function render() {
   produtos.forEach((p, i) => {
     adminHTML += `
       <div>
-        ${p.nome} - R$ ${p.preco} | Estoque: ${p.qtd}
+        <b>${p.nome}</b> - R$ ${p.preco} | Estoque: ${p.qtd}
+        <button onclick="addEstoque(${i})">+1 estoque</button>
         <button onclick="remover(${i})">Apagar</button>
       </div>
     `;
@@ -146,17 +172,31 @@ function render() {
 }
 
 function addProduto() {
-  let nome = document.getElementById("nome").value;
+  let nome = document.getElementById("nome").value.trim();
   let preco = parseFloat(document.getElementById("preco").value);
+  let estoque = parseInt(document.getElementById("estoque").value) || 10;
 
   if (!nome || !preco) return;
 
-  produtos.push({
-    nome,
-    preco,
-    qtd: 10
-  });
+  let existente = produtos.find(p => p.nome.toLowerCase() === nome.toLowerCase());
 
+  if (existente) {
+    existente.preco = preco;
+    existente.qtd += estoque;
+  } else {
+    produtos.push({
+      nome,
+      preco,
+      qtd: estoque
+    });
+  }
+
+  salvar();
+  render();
+}
+
+function addEstoque(i) {
+  produtos[i].qtd += 1;
   salvar();
   render();
 }
@@ -175,7 +215,6 @@ function add(i) {
   }
 
   carrinho.push(produtos[i]);
-
   produtos[i].qtd -= 1;
 
   total += produtos[i].preco;
@@ -194,7 +233,7 @@ function add(i) {
 }
 
 function finalizar() {
-  alert("Venda finalizada! Total: R$ " + total);
+  alert("Total da venda: R$ " + total);
 
   carrinho = [];
   total = 0;
