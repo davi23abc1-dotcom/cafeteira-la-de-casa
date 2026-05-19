@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cafeteira Lá de Casa</title>
 
 <style>
@@ -16,12 +17,14 @@ header {
   color: white;
   padding: 15px;
   text-align: center;
+  font-size: 20px;
 }
 
 .container {
   display: flex;
   gap: 20px;
   padding: 20px;
+  flex-wrap: wrap;
 }
 
 .box {
@@ -29,6 +32,7 @@ header {
   padding: 15px;
   border-radius: 10px;
   flex: 1;
+  min-width: 280px;
 }
 
 input {
@@ -45,6 +49,7 @@ button {
   border: none;
   margin-top: 5px;
   cursor: pointer;
+  border-radius: 5px;
 }
 
 .produto {
@@ -52,6 +57,11 @@ button {
   margin: 5px 0;
   background: #f8bbd0;
   cursor: pointer;
+  border-radius: 5px;
+}
+
+.produto:hover {
+  background: #f48fb1;
 }
 
 .total {
@@ -76,7 +86,7 @@ button {
 <input id="nome" placeholder="Nome do produto">
 <input id="preco" placeholder="Preço">
 
-<button onclick="addProduto()">Adicionar</button>
+<button onclick="addProduto()">Adicionar Produto (estoque 10)</button>
 
 <div id="listaAdmin"></div>
 </div>
@@ -94,7 +104,7 @@ button {
 
 <p class="total">Total: R$ <span id="total">0</span></p>
 
-<button onclick="finalizar()">Finalizar</button>
+<button onclick="finalizar()">Finalizar Venda</button>
 </div>
 
 </div>
@@ -112,27 +122,27 @@ function salvar() {
 function render() {
 
   // ADMIN
-  let admin = "";
+  let adminHTML = "";
   produtos.forEach((p, i) => {
-    admin += `
+    adminHTML += `
       <div>
-        ${p.nome} - R$ ${p.preco}
+        ${p.nome} - R$ ${p.preco} | Estoque: ${p.qtd}
         <button onclick="remover(${i})">Apagar</button>
       </div>
     `;
   });
-  document.getElementById("listaAdmin").innerHTML = admin;
+  document.getElementById("listaAdmin").innerHTML = adminHTML;
 
   // LOJA
-  let loja = "";
+  let lojaHTML = "";
   produtos.forEach((p, i) => {
-    loja += `
+    lojaHTML += `
       <div class="produto" onclick="add(${i})">
-        ${p.nome} - R$ ${p.preco}
+        ${p.nome} - R$ ${p.preco} | Estoque: ${p.qtd}
       </div>
     `;
   });
-  document.getElementById("listaLoja").innerHTML = loja;
+  document.getElementById("listaLoja").innerHTML = lojaHTML;
 }
 
 function addProduto() {
@@ -141,7 +151,12 @@ function addProduto() {
 
   if (!nome || !preco) return;
 
-  produtos.push({ nome, preco });
+  produtos.push({
+    nome,
+    preco,
+    qtd: 10
+  });
+
   salvar();
   render();
 }
@@ -153,23 +168,37 @@ function remover(i) {
 }
 
 function add(i) {
+
+  if (produtos[i].qtd <= 0) {
+    alert("Sem estoque!");
+    return;
+  }
+
   carrinho.push(produtos[i]);
+
+  produtos[i].qtd -= 1;
+
   total += produtos[i].preco;
+
+  salvar();
+  render();
 
   document.getElementById("total").innerText = total;
 
-  let c = "";
+  let carrinhoHTML = "";
   carrinho.forEach(p => {
-    c += `<div>${p.nome} - R$ ${p.preco}</div>`;
+    carrinhoHTML += `<div>${p.nome} - R$ ${p.preco}</div>`;
   });
 
-  document.getElementById("carrinho").innerHTML = c;
+  document.getElementById("carrinho").innerHTML = carrinhoHTML;
 }
 
 function finalizar() {
-  alert("Total: R$ " + total);
+  alert("Venda finalizada! Total: R$ " + total);
+
   carrinho = [];
   total = 0;
+
   document.getElementById("carrinho").innerHTML = "";
   document.getElementById("total").innerText = 0;
 }
