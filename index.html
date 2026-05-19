@@ -2,15 +2,13 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cafeteira Lá de Casa</title>
 
 <style>
 body {
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   background: #ffe6f0;
   margin: 0;
-  padding: 0;
 }
 
 header {
@@ -18,14 +16,12 @@ header {
   color: white;
   padding: 15px;
   text-align: center;
-  font-size: 22px;
 }
 
 .container {
   display: flex;
   gap: 20px;
   padding: 20px;
-  flex-wrap: wrap;
 }
 
 .box {
@@ -33,7 +29,22 @@ header {
   padding: 15px;
   border-radius: 10px;
   flex: 1;
-  min-width: 250px;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  margin: 5px 0;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background: #d81b60;
+  color: white;
+  border: none;
+  margin-top: 5px;
+  cursor: pointer;
 }
 
 .produto {
@@ -41,31 +52,11 @@ header {
   margin: 5px 0;
   background: #f8bbd0;
   cursor: pointer;
-  border-radius: 5px;
-}
-
-.produto:hover {
-  background: #f48fb1;
-}
-
-button {
-  padding: 10px;
-  margin-top: 10px;
-  width: 100%;
-  background: #d81b60;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #ad1457;
 }
 
 .total {
-  font-size: 20px;
   font-weight: bold;
+  font-size: 18px;
 }
 </style>
 </head>
@@ -78,49 +69,113 @@ button:hover {
 
 <div class="container">
 
-  <div class="box">
-    <h3>Produtos</h3>
+<!-- ADMIN -->
+<div class="box">
+<h3>Admin - Produtos</h3>
 
-    <div class="produto" onclick="add('Café', 5)">Café - R$5</div>
-    <div class="produto" onclick="add('Coca Lata', 6)">Coca Lata - R$6</div>
-    <div class="produto" onclick="add('Mousse Limão', 8)">Mousse Limão - R$8</div>
-    <div class="produto" onclick="add('Sanduíche Especial', 18)">Sanduíche Especial - R$18</div>
+<input id="nome" placeholder="Nome do produto">
+<input id="preco" placeholder="Preço">
 
-  </div>
+<button onclick="addProduto()">Adicionar</button>
 
-  <div class="box">
-    <h3>Carrinho</h3>
+<div id="listaAdmin"></div>
+</div>
 
-    <div id="carrinho"></div>
+<!-- LOJA -->
+<div class="box">
+<h3>Loja</h3>
 
-    <p class="total">Total: R$ <span id="total">0</span></p>
+<div id="listaLoja"></div>
 
-    <button onclick="finalizar()">Finalizar Venda (Pix)</button>
-  </div>
+<hr>
+
+<h3>Carrinho</h3>
+<div id="carrinho"></div>
+
+<p class="total">Total: R$ <span id="total">0</span></p>
+
+<button onclick="finalizar()">Finalizar</button>
+</div>
 
 </div>
 
 <script>
+
+let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+let carrinho = [];
 let total = 0;
 
-function add(nome, preco){
-  const carrinho = document.getElementById("carrinho");
-
-  const item = document.createElement("div");
-  item.innerHTML = nome + " - R$ " + preco;
-
-  carrinho.appendChild(item);
-
-  total += preco;
-  document.getElementById("total").innerText = total;
+function salvar() {
+  localStorage.setItem("produtos", JSON.stringify(produtos));
 }
 
-function finalizar(){
-  alert("Venda finalizada! Total: R$ " + total);
-  document.getElementById("carrinho").innerHTML = "";
+function render() {
+
+  // ADMIN
+  let admin = "";
+  produtos.forEach((p, i) => {
+    admin += `
+      <div>
+        ${p.nome} - R$ ${p.preco}
+        <button onclick="remover(${i})">Apagar</button>
+      </div>
+    `;
+  });
+  document.getElementById("listaAdmin").innerHTML = admin;
+
+  // LOJA
+  let loja = "";
+  produtos.forEach((p, i) => {
+    loja += `
+      <div class="produto" onclick="add(${i})">
+        ${p.nome} - R$ ${p.preco}
+      </div>
+    `;
+  });
+  document.getElementById("listaLoja").innerHTML = loja;
+}
+
+function addProduto() {
+  let nome = document.getElementById("nome").value;
+  let preco = parseFloat(document.getElementById("preco").value);
+
+  if (!nome || !preco) return;
+
+  produtos.push({ nome, preco });
+  salvar();
+  render();
+}
+
+function remover(i) {
+  produtos.splice(i, 1);
+  salvar();
+  render();
+}
+
+function add(i) {
+  carrinho.push(produtos[i]);
+  total += produtos[i].preco;
+
+  document.getElementById("total").innerText = total;
+
+  let c = "";
+  carrinho.forEach(p => {
+    c += `<div>${p.nome} - R$ ${p.preco}</div>`;
+  });
+
+  document.getElementById("carrinho").innerHTML = c;
+}
+
+function finalizar() {
+  alert("Total: R$ " + total);
+  carrinho = [];
   total = 0;
+  document.getElementById("carrinho").innerHTML = "";
   document.getElementById("total").innerText = 0;
 }
+
+render();
+
 </script>
 
 </body>
