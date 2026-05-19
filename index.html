@@ -30,7 +30,6 @@ header {
   padding: 8px;
   border-radius: 50%;
   cursor: pointer;
-  font-weight: bold;
 }
 
 .container {
@@ -48,7 +47,7 @@ header {
   min-width: 280px;
 }
 
-input {
+input, select {
   width: 100%;
   padding: 8px;
   margin: 5px 0;
@@ -73,18 +72,12 @@ button {
   border-radius: 5px;
 }
 
-.produto:hover {
-  background: #f48fb1;
-}
-
 .total {
   font-weight: bold;
-  font-size: 18px;
 }
 
 .admin {
   display: none;
-  border: 2px dashed #d81b60;
 }
 </style>
 </head>
@@ -100,13 +93,19 @@ button {
 
 <!-- ADMIN -->
 <div class="box admin" id="adminBox">
-<h3>⚙ Painel Admin</h3>
+<h3>⚙ Admin</h3>
 
 <input id="nome" placeholder="Nome do produto">
 <input id="preco" placeholder="Preço">
-<input id="estoque" placeholder="Estoque inicial">
+<input id="estoque" placeholder="Estoque">
 
-<button onclick="addProduto()">Adicionar / Atualizar Produto</button>
+<select id="categoria">
+  <option value="salgados">Salgados</option>
+  <option value="doces">Doces</option>
+  <option value="bebidas">Bebidas</option>
+</select>
+
+<button onclick="addProduto()">Adicionar Produto</button>
 
 <div id="listaAdmin"></div>
 </div>
@@ -114,6 +113,13 @@ button {
 <!-- LOJA -->
 <div class="box">
 <h3>Loja</h3>
+
+<select id="filtro" onchange="render()">
+  <option value="todos">Todos</option>
+  <option value="salgados">Salgados</option>
+  <option value="doces">Doces</option>
+  <option value="bebidas">Bebidas</option>
+</select>
 
 <div id="listaLoja"></div>
 
@@ -135,87 +141,91 @@ let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 let carrinho = [];
 let total = 0;
 
-function salvar() {
+function salvar(){
   localStorage.setItem("produtos", JSON.stringify(produtos));
 }
 
-function toggleAdmin() {
-  let admin = document.getElementById("adminBox");
-  admin.style.display = admin.style.display === "none" ? "block" : "none";
+function toggleAdmin(){
+  let a = document.getElementById("adminBox");
+  a.style.display = a.style.display === "none" ? "block" : "none";
 }
 
-function render() {
+function addProduto(){
+
+  let nome = document.getElementById("nome").value;
+  let preco = parseFloat(document.getElementById("preco").value);
+  let estoque = parseInt(document.getElementById("estoque").value) || 10;
+  let categoria = document.getElementById("categoria").value;
+
+  if(!nome || !preco) return;
+
+  produtos.push({
+    nome,
+    preco,
+    qtd: estoque,
+    cat: categoria
+  });
+
+  salvar();
+  render();
+}
+
+function render(){
+
+  let filtro = document.getElementById("filtro").value;
+
+  let lista = produtos.filter(p => {
+    return filtro === "todos" || p.cat === filtro;
+  });
+
+  // LOJA
+  let lojaHTML = "";
+  lista.forEach((p,i) => {
+    lojaHTML += `
+      <div class="produto" onclick="add(${produtos.indexOf(p)})">
+        ${p.nome} - R$ ${p.preco} | Estoque: ${p.qtd}
+      </div>
+    `;
+  });
+
+  document.getElementById("listaLoja").innerHTML = lojaHTML;
 
   // ADMIN
   let adminHTML = "";
-  produtos.forEach((p, i) => {
+  produtos.forEach((p,i) => {
     adminHTML += `
       <div>
-        <b>${p.nome}</b> - R$ ${p.preco} | Estoque: ${p.qtd}
+        <b>${p.nome}</b> (${p.cat}) - R$ ${p.preco} | ${p.qtd}
         <button onclick="addEstoque(${i})">+1 estoque</button>
         <button onclick="remover(${i})">Apagar</button>
       </div>
     `;
   });
+
   document.getElementById("listaAdmin").innerHTML = adminHTML;
-
-  // LOJA
-  let lojaHTML = "";
-  produtos.forEach((p, i) => {
-    lojaHTML += `
-      <div class="produto" onclick="add(${i})">
-        ${p.nome} - R$ ${p.preco} | Estoque: ${p.qtd}
-      </div>
-    `;
-  });
-  document.getElementById("listaLoja").innerHTML = lojaHTML;
 }
 
-function addProduto() {
-  let nome = document.getElementById("nome").value.trim();
-  let preco = parseFloat(document.getElementById("preco").value);
-  let estoque = parseInt(document.getElementById("estoque").value) || 10;
-
-  if (!nome || !preco) return;
-
-  let existente = produtos.find(p => p.nome.toLowerCase() === nome.toLowerCase());
-
-  if (existente) {
-    existente.preco = preco;
-    existente.qtd += estoque;
-  } else {
-    produtos.push({
-      nome,
-      preco,
-      qtd: estoque
-    });
-  }
-
+function addEstoque(i){
+  produtos[i].qtd++;
   salvar();
   render();
 }
 
-function addEstoque(i) {
-  produtos[i].qtd += 1;
+function remover(i){
+  produtos.splice(i,1);
   salvar();
   render();
 }
 
-function remover(i) {
-  produtos.splice(i, 1);
-  salvar();
-  render();
-}
+function add(i){
 
-function add(i) {
-
-  if (produtos[i].qtd <= 0) {
+  if(produtos[i].qtd <= 0){
     alert("Sem estoque!");
     return;
   }
 
   carrinho.push(produtos[i]);
-  produtos[i].qtd -= 1;
+  produtos[i].qtd--;
 
   total += produtos[i].preco;
 
@@ -224,20 +234,18 @@ function add(i) {
 
   document.getElementById("total").innerText = total;
 
-  let carrinhoHTML = "";
-  carrinho.forEach(p => {
-    carrinhoHTML += `<div>${p.nome} - R$ ${p.preco}</div>`;
+  let c = "";
+  carrinho.forEach(p=>{
+    c += `<div>${p.nome} - R$ ${p.preco}</div>`;
   });
 
-  document.getElementById("carrinho").innerHTML = carrinhoHTML;
+  document.getElementById("carrinho").innerHTML = c;
 }
 
-function finalizar() {
-  alert("Total da venda: R$ " + total);
-
+function finalizar(){
+  alert("Total: R$ " + total);
   carrinho = [];
   total = 0;
-
   document.getElementById("carrinho").innerHTML = "";
   document.getElementById("total").innerText = 0;
 }
