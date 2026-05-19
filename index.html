@@ -6,79 +6,21 @@
 <title>Cafeteira Lá de Casa</title>
 
 <style>
-body {
-  font-family: Arial;
-  background: #ffe6f0;
-  margin: 0;
-}
+body {font-family: Arial; background:#ffe6f0; margin:0;}
+header {background:#d81b60;color:#fff;padding:15px;text-align:center;position:relative;}
+.settings-btn{position:absolute;right:15px;top:10px;background:#fff;color:#d81b60;border:none;padding:8px;border-radius:50%;cursor:pointer;}
 
-header {
-  background: #d81b60;
-  color: white;
-  padding: 15px;
-  text-align: center;
-  position: relative;
-}
+.container{display:flex;gap:20px;padding:20px;flex-wrap:wrap;}
+.box{background:#fff;padding:15px;border-radius:10px;flex:1;min-width:280px;}
 
-.settings-btn {
-  position: absolute;
-  right: 15px;
-  top: 10px;
-  background: white;
-  color: #d81b60;
-  border: none;
-  padding: 8px;
-  border-radius: 50%;
-  cursor: pointer;
-}
+input{width:100%;padding:8px;margin:5px 0;}
+button{width:100%;padding:10px;background:#d81b60;color:#fff;border:none;margin-top:5px;border-radius:5px;cursor:pointer;}
 
-.container {
-  display: flex;
-  gap: 20px;
-  padding: 20px;
-  flex-wrap: wrap;
-}
+.cat{border:2px dashed #d81b60;margin:10px 0;padding:10px;border-radius:10px;}
+.produto{background:#f8bbd0;padding:8px;margin:5px 0;border-radius:5px;cursor:pointer;}
 
-.box {
-  background: white;
-  padding: 15px;
-  border-radius: 10px;
-  flex: 1;
-  min-width: 280px;
-}
-
-input, select {
-  width: 100%;
-  padding: 8px;
-  margin: 5px 0;
-}
-
-button {
-  width: 100%;
-  padding: 10px;
-  background: #d81b60;
-  color: white;
-  border: none;
-  margin-top: 5px;
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-.produto {
-  padding: 10px;
-  margin: 5px 0;
-  background: #f8bbd0;
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-.total {
-  font-weight: bold;
-}
-
-.admin {
-  display: none;
-}
+.admin{display:none;}
+.total{font-weight:bold;}
 </style>
 </head>
 
@@ -93,17 +35,20 @@ button {
 
 <!-- ADMIN -->
 <div class="box admin" id="adminBox">
-<h3>⚙ Admin</h3>
+<h3>⚙ Painel Admin</h3>
 
-<input id="nome" placeholder="Nome do produto">
+<h4>➕ Criar Categoria</h4>
+<input id="catNome" placeholder="Nome da categoria">
+<button onclick="addCategoria()">Criar Categoria</button>
+
+<hr>
+
+<h4>➕ Produto</h4>
+<input id="nome" placeholder="Nome produto">
 <input id="preco" placeholder="Preço">
 <input id="estoque" placeholder="Estoque">
 
-<select id="categoria">
-  <option value="salgados">Salgados</option>
-  <option value="doces">Doces</option>
-  <option value="bebidas">Bebidas</option>
-</select>
+<select id="catSelect"></select>
 
 <button onclick="addProduto()">Adicionar Produto</button>
 
@@ -114,14 +59,7 @@ button {
 <div class="box">
 <h3>Loja</h3>
 
-<select id="filtro" onchange="render()">
-  <option value="todos">Todos</option>
-  <option value="salgados">Salgados</option>
-  <option value="doces">Doces</option>
-  <option value="bebidas">Bebidas</option>
-</select>
-
-<div id="listaLoja"></div>
+<div id="loja"></div>
 
 <hr>
 
@@ -130,124 +68,104 @@ button {
 
 <p class="total">Total: R$ <span id="total">0</span></p>
 
-<button onclick="finalizar()">Finalizar Venda</button>
+<button onclick="finalizar()">Finalizar</button>
 </div>
 
 </div>
 
 <script>
 
+let categorias = JSON.parse(localStorage.getItem("cats")) || [];
 let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 let carrinho = [];
 let total = 0;
 
 function salvar(){
+  localStorage.setItem("cats", JSON.stringify(categorias));
   localStorage.setItem("produtos", JSON.stringify(produtos));
 }
 
 function toggleAdmin(){
-  let a = document.getElementById("adminBox");
-  a.style.display = a.style.display === "none" ? "block" : "none";
+  let a=document.getElementById("adminBox");
+  a.style.display = a.style.display==="none"?"block":"none";
+}
+
+function addCategoria(){
+  let nome=document.getElementById("catNome").value;
+  if(!nome) return;
+
+  categorias.push({nome});
+  salvar();
+  render();
 }
 
 function addProduto(){
+  let nome=document.getElementById("nome").value;
+  let preco=parseFloat(document.getElementById("preco").value);
+  let estoque=parseInt(document.getElementById("estoque").value)||10;
+  let cat=document.getElementById("catSelect").value;
 
-  let nome = document.getElementById("nome").value;
-  let preco = parseFloat(document.getElementById("preco").value);
-  let estoque = parseInt(document.getElementById("estoque").value) || 10;
-  let categoria = document.getElementById("categoria").value;
-
-  if(!nome || !preco) return;
-
-  produtos.push({
-    nome,
-    preco,
-    qtd: estoque,
-    cat: categoria
-  });
-
-  salvar();
-  render();
-}
-
-function render(){
-
-  let filtro = document.getElementById("filtro").value;
-
-  let lista = produtos.filter(p => {
-    return filtro === "todos" || p.cat === filtro;
-  });
-
-  // LOJA
-  let lojaHTML = "";
-  lista.forEach((p,i) => {
-    lojaHTML += `
-      <div class="produto" onclick="add(${produtos.indexOf(p)})">
-        ${p.nome} - R$ ${p.preco} | Estoque: ${p.qtd}
-      </div>
-    `;
-  });
-
-  document.getElementById("listaLoja").innerHTML = lojaHTML;
-
-  // ADMIN
-  let adminHTML = "";
-  produtos.forEach((p,i) => {
-    adminHTML += `
-      <div>
-        <b>${p.nome}</b> (${p.cat}) - R$ ${p.preco} | ${p.qtd}
-        <button onclick="addEstoque(${i})">+1 estoque</button>
-        <button onclick="remover(${i})">Apagar</button>
-      </div>
-    `;
-  });
-
-  document.getElementById("listaAdmin").innerHTML = adminHTML;
-}
-
-function addEstoque(i){
-  produtos[i].qtd++;
-  salvar();
-  render();
-}
-
-function remover(i){
-  produtos.splice(i,1);
+  produtos.push({nome,preco,qtd:estoque,cat});
   salvar();
   render();
 }
 
 function add(i){
-
-  if(produtos[i].qtd <= 0){
-    alert("Sem estoque!");
-    return;
-  }
-
+  if(produtos[i].qtd<=0){alert("Sem estoque!");return;}
   carrinho.push(produtos[i]);
   produtos[i].qtd--;
-
-  total += produtos[i].preco;
-
+  total+=produtos[i].preco;
   salvar();
   render();
+  document.getElementById("total").innerText=total;
+}
 
-  document.getElementById("total").innerText = total;
+function render(){
 
-  let c = "";
-  carrinho.forEach(p=>{
-    c += `<div>${p.nome} - R$ ${p.preco}</div>`;
+  // SELECT CATEGORIAS
+  let sel="";
+  categorias.forEach(c=>{
+    sel+=`<option value="${c.nome}">${c.nome}</option>`;
+  });
+  document.getElementById("catSelect").innerHTML=sel;
+
+  // LOJA
+  let loja="";
+  categorias.forEach(c=>{
+    loja+=`<h4 class="cat">${c.nome}</h4>`;
+
+    produtos.filter(p=>p.cat===c.nome).forEach((p,i)=>{
+      loja+=`<div class="produto" onclick="add(${produtos.indexOf(p)})">
+      ${p.nome} - R$ ${p.preco} | ${p.qtd}</div>`;
+    });
   });
 
-  document.getElementById("carrinho").innerHTML = c;
+  document.getElementById("loja").innerHTML=loja;
+
+  // ADMIN
+  let admin="";
+  categorias.forEach((c,i)=>{
+    admin+=`<div class="cat">${c.nome}
+    <button onclick="delCat(${i})">Apagar categoria</button></div>`;
+  });
+
+  document.getElementById("listaAdmin").innerHTML=admin;
+}
+
+function delCat(i){
+  let nome=categorias[i].nome;
+  categorias.splice(i,1);
+  produtos=produtos.filter(p=>p.cat!==nome);
+  salvar();
+  render();
 }
 
 function finalizar(){
-  alert("Total: R$ " + total);
-  carrinho = [];
-  total = 0;
-  document.getElementById("carrinho").innerHTML = "";
-  document.getElementById("total").innerText = 0;
+  alert("Total: R$ "+total);
+  carrinho=[];
+  total=0;
+  document.getElementById("carrinho").innerHTML="";
+  document.getElementById("total").innerText=0;
 }
 
 render();
