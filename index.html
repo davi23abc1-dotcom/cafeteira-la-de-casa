@@ -29,7 +29,8 @@ header{
   background:white;
   color:#d81b60;
   border:none;
-  padding:8px 12px;
+  width:40px;
+  height:40px;
   border-radius:50%;
   cursor:pointer;
   font-size:18px;
@@ -78,11 +79,18 @@ button{
   cursor:pointer;
 }
 
+.produto:hover{
+  background:#f48fb1;
+}
+
+.admin{
+  display:none;
+}
+
 .categorias-grid{
   display:flex;
   flex-wrap:wrap;
   gap:10px;
-  margin-bottom:15px;
 }
 
 .categoria{
@@ -107,10 +115,6 @@ button{
   font-size:12px;
   border-radius:5px;
   margin-left:10px;
-}
-
-.admin{
-  display:none;
 }
 
 .total{
@@ -143,7 +147,8 @@ onclick="toggleAdmin()">
 
 <h2>⚙ Painel Admin</h2>
 
-<input id="novaCategoria"
+<input
+id="novaCategoria"
 placeholder="Nova categoria">
 
 <button onclick="criarCategoria()">
@@ -152,18 +157,22 @@ Criar Categoria
 
 <hr>
 
-<input id="nome"
+<input
+id="nome"
 placeholder="Nome produto">
 
-<input id="preco"
+<input
+id="preco"
 type="number"
 placeholder="Preço venda">
 
-<input id="custo"
+<input
+id="custo"
 type="number"
 placeholder="Custo">
 
-<input id="estoque"
+<input
+id="estoque"
 type="number"
 placeholder="Estoque">
 
@@ -283,10 +292,14 @@ function toggleAdmin(){
   let admin =
   document.getElementById("adminBox");
 
-  admin.style.display =
-  admin.style.display === "none"
-  ? "block"
-  : "none";
+  if(admin.style.display === "block"){
+
+    admin.style.display = "none";
+
+  }else{
+
+    admin.style.display = "block";
+  }
 }
 
 function criarCategoria(){
@@ -310,11 +323,18 @@ function criarCategoria(){
 
 function apagarCategoria(nome){
 
+  let confirmar =
+  confirm("Excluir categoria?");
+
+  if(!confirmar) return;
+
   categorias =
   categorias.filter(c => c !== nome);
 
   produtos =
-  produtos.filter(p => p.categoria !== nome);
+  produtos.filter(p =>
+    p.categoria !== nome
+  );
 
   salvar();
 
@@ -346,6 +366,13 @@ function addProduto(){
     "categoriaSelect"
   ).value;
 
+  if(!nome || !preco || !custo || !estoque){
+
+    alert("Preencha tudo");
+
+    return;
+  }
+
   produtos.push({
     nome,
     preco,
@@ -357,6 +384,11 @@ function addProduto(){
   salvar();
 
   render();
+
+  document.getElementById("nome").value = "";
+  document.getElementById("preco").value = "";
+  document.getElementById("custo").value = "";
+  document.getElementById("estoque").value = "";
 }
 
 function apagarProduto(i){
@@ -418,4 +450,299 @@ function atualizarCarrinho(){
   });
 
   document.getElementById(
-    "
+    "carrinho"
+  ).innerHTML = html;
+
+  document.getElementById(
+    "total"
+  ).innerText = total.toFixed(2);
+
+  document.getElementById(
+    "lucro"
+  ).innerText = lucro.toFixed(2);
+}
+
+function finalizarVenda(){
+
+  if(carrinho.length <= 0){
+
+    alert("Carrinho vazio");
+
+    return;
+  }
+
+  let pagamento =
+  document.getElementById(
+    "pagamento"
+  ).value;
+
+  vendas.push({
+    total,
+    lucro,
+    pagamento,
+    data:new Date().toLocaleString()
+  });
+
+  salvar();
+
+  carrinho = [];
+
+  total = 0;
+
+  lucro = 0;
+
+  atualizarCarrinho();
+
+  render();
+
+  alert("Venda finalizada!");
+}
+
+function resetarCaixa(){
+
+  let confirmar =
+  confirm("Resetar caixa?");
+
+  if(!confirmar) return;
+
+  vendas = [];
+
+  salvar();
+
+  render();
+
+  alert("Caixa resetado");
+}
+
+function pesquisarProdutos(){
+
+  let pesquisa =
+  document.getElementById(
+    "pesquisa"
+  ).value.toLowerCase();
+
+  let html = "";
+
+  if(pesquisa === ""){
+
+    document.getElementById(
+      "resultadoPesquisa"
+    ).innerHTML = "";
+
+    return;
+  }
+
+  let encontrados =
+  produtos.filter(p =>
+    p.nome.toLowerCase()
+    .includes(pesquisa)
+  );
+
+  encontrados.forEach((p)=>{
+
+    html += `
+      <div class="produto"
+      onclick="adicionarCarrinho(${produtos.indexOf(p)})">
+
+      🔍 ${p.nome}<br>
+
+      💰 R$ ${p.preco}<br>
+
+      📦 ${p.qtd}
+
+      </div>
+    `;
+  });
+
+  document.getElementById(
+    "resultadoPesquisa"
+  ).innerHTML = html;
+}
+
+function toggleCategoria(nome){
+
+  abertas[nome] = !abertas[nome];
+
+  salvar();
+
+  render();
+}
+
+function render(){
+
+  // SELECT
+  let selectHTML = "";
+
+  categorias.forEach((c)=>{
+
+    selectHTML += `
+      <option>${c}</option>
+    `;
+  });
+
+  document.getElementById(
+    "categoriaSelect"
+  ).innerHTML = selectHTML;
+
+  // LOJA
+  let lojaHTML = `
+    <div class="categorias-grid">
+  `;
+
+  categorias.forEach((categoria)=>{
+
+    lojaHTML += `
+      <div class="categoria"
+      onclick="toggleCategoria('${categoria}')">
+
+      <span>${categoria}</span>
+
+      <button
+      class="btn-excluir-cat"
+      onclick="event.stopPropagation();
+      apagarCategoria('${categoria}')">
+
+      ✖
+
+      </button>
+
+      </div>
+    `;
+
+    if(abertas[categoria]){
+
+      lojaHTML += `
+        <div style="width:100%;">
+      `;
+
+      produtos
+      .filter(p =>
+        p.categoria === categoria
+      )
+
+      .forEach((p)=>{
+
+        lojaHTML += `
+          <div class="produto"
+          onclick="adicionarCarrinho(${produtos.indexOf(p)})">
+
+          <b>${p.nome}</b><br>
+
+          💰 R$ ${p.preco}<br>
+
+          📦 Estoque: ${p.qtd}
+
+          </div>
+        `;
+      });
+
+      lojaHTML += `</div>`;
+    }
+  });
+
+  lojaHTML += `</div>`;
+
+  document.getElementById(
+    "loja"
+  ).innerHTML = lojaHTML;
+
+  // ADMIN
+  let adminHTML = "";
+
+  produtos.forEach((p)=>{
+
+    adminHTML += `
+      <div class="produto">
+
+      <b>${p.nome}</b><br>
+
+      📁 ${p.categoria}<br>
+
+      💰 Venda:
+      R$ ${p.preco}<br>
+
+      🧾 Custo:
+      R$ ${p.custo}<br>
+
+      📦 ${p.qtd}<br><br>
+
+      <button
+      onclick="maisEstoque(${produtos.indexOf(p)})">
+
+      + Estoque
+
+      </button>
+
+      <button
+      onclick="apagarProduto(${produtos.indexOf(p)})">
+
+      🗑 Apagar
+
+      </button>
+
+      </div>
+    `;
+  });
+
+  document.getElementById(
+    "listaAdmin"
+  ).innerHTML = adminHTML;
+
+  // RELATÓRIO
+  let totalDia = 0;
+
+  let lucroDia = 0;
+
+  let pix = 0;
+
+  let dinheiro = 0;
+
+  let cartao = 0;
+
+  vendas.forEach(v=>{
+
+    totalDia += v.total;
+
+    lucroDia += v.lucro;
+
+    if(v.pagamento === "Pix")
+      pix += v.total;
+
+    if(v.pagamento === "Dinheiro")
+      dinheiro += v.total;
+
+    if(v.pagamento === "Cartão")
+      cartao += v.total;
+  });
+
+  document.getElementById(
+    "relatorio"
+  ).innerHTML = `
+
+    💰 Vendas:
+    R$ ${totalDia.toFixed(2)}<br><br>
+
+    📈 Lucro:
+    R$ ${lucroDia.toFixed(2)}<br><br>
+
+    💳 Pix:
+    R$ ${pix.toFixed(2)}<br>
+
+    💵 Dinheiro:
+    R$ ${dinheiro.toFixed(2)}<br>
+
+    💳 Cartão:
+    R$ ${cartao.toFixed(2)}<br><br>
+
+    🧾 Total vendas:
+    ${vendas.length}
+
+  `;
+}
+
+render();
+
+</script>
+
+</body>
+</html>
