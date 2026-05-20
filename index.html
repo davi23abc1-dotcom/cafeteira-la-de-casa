@@ -108,6 +108,10 @@ button{
   box-sizing:border-box;
 }
 
+.categoria.ativa{
+  background:#880e4f;
+}
+
 .btn-excluir-cat{
   background:#ff5252;
   width:auto;
@@ -184,6 +188,10 @@ Adicionar Produto
 
 <hr>
 
+<button onclick="toggleProdutosAdmin()">
+📦 Mostrar / Ocultar Produtos
+</button>
+
 <div id="listaAdmin"></div>
 
 <hr>
@@ -225,6 +233,14 @@ onkeyup="pesquisarProdutos()"
 
 <h3>Carrinho</h3>
 
+<button
+style="background:#757575;"
+onclick="cancelarVenda()">
+
+❌ Cancelar Venda
+
+</button>
+
 <div id="carrinho"></div>
 
 <p class="total">
@@ -264,6 +280,8 @@ let total = 0;
 
 let lucro = 0;
 
+let adminProdutosVisivel = false;
+
 function salvar(){
 
   localStorage.setItem(
@@ -300,6 +318,14 @@ function toggleAdmin(){
 
     admin.style.display = "block";
   }
+}
+
+function toggleProdutosAdmin(){
+
+  adminProdutosVisivel =
+  !adminProdutosVisivel;
+
+  render();
 }
 
 function criarCategoria(){
@@ -466,6 +492,37 @@ function removerCarrinho(index){
   atualizarCarrinho();
 
   render();
+}
+
+function cancelarVenda(){
+
+  carrinho.forEach((produto)=>{
+
+    produtos.forEach((p)=>{
+
+      if(
+        p.nome === produto.nome &&
+        p.categoria === produto.categoria
+      ){
+
+        p.qtd++;
+      }
+    });
+  });
+
+  carrinho = [];
+
+  total = 0;
+
+  lucro = 0;
+
+  salvar();
+
+  atualizarCarrinho();
+
+  render();
+
+  alert("Venda cancelada");
 }
 
 function atualizarCarrinho(){
@@ -636,7 +693,8 @@ function render(){
   categorias.forEach((categoria)=>{
 
     lojaHTML += `
-      <div class="categoria"
+      <div class="categoria
+      ${abertas[categoria] ? 'ativa' : ''}"
       onclick="toggleCategoria('${categoria}')">
 
       <span>${categoria}</span>
@@ -692,40 +750,43 @@ function render(){
 
   let adminHTML = "";
 
-  produtos.forEach((p)=>{
+  if(adminProdutosVisivel){
 
-    adminHTML += `
-      <div class="produto">
+    produtos.forEach((p)=>{
 
-      <b>${p.nome}</b><br>
+      adminHTML += `
+        <div class="produto">
 
-      📁 ${p.categoria}<br>
+        <b>${p.nome}</b><br>
 
-      💰 Venda:
-      R$ ${p.preco}<br>
+        📁 ${p.categoria}<br>
 
-      🧾 Custo:
-      R$ ${p.custo}<br>
+        💰 Venda:
+        R$ ${p.preco}<br>
 
-      📦 ${p.qtd}<br><br>
+        🧾 Custo:
+        R$ ${p.custo}<br>
 
-      <button
-      onclick="maisEstoque(${produtos.indexOf(p)})">
+        📦 ${p.qtd}<br><br>
 
-      + Estoque
+        <button
+        onclick="maisEstoque(${produtos.indexOf(p)})">
 
-      </button>
+        + Estoque
 
-      <button
-      onclick="apagarProduto(${produtos.indexOf(p)})">
+        </button>
 
-      🗑 Apagar
+        <button
+        onclick="apagarProduto(${produtos.indexOf(p)})">
 
-      </button>
+        🗑 Apagar
 
-      </div>
-    `;
-  });
+        </button>
+
+        </div>
+      `;
+    });
+  }
 
   document.getElementById(
     "listaAdmin"
