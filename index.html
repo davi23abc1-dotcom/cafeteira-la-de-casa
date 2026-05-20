@@ -477,6 +477,7 @@ function finalizarVenda(){
   ).value;
 
   vendas.push({
+    itens:[...carrinho],
     total,
     lucro,
     pagamento,
@@ -570,7 +571,6 @@ function toggleCategoria(nome){
 
 function render(){
 
-  // SELECT
   let selectHTML = "";
 
   categorias.forEach((c)=>{
@@ -584,7 +584,6 @@ function render(){
     "categoriaSelect"
   ).innerHTML = selectHTML;
 
-  // LOJA
   let lojaHTML = `
     <div class="categorias-grid">
   `;
@@ -646,7 +645,6 @@ function render(){
     "loja"
   ).innerHTML = lojaHTML;
 
-  // ADMIN
   let adminHTML = "";
 
   produtos.forEach((p)=>{
@@ -688,21 +686,15 @@ function render(){
     "listaAdmin"
   ).innerHTML = adminHTML;
 
-  // RELATÓRIO
   let totalDia = 0;
-
   let lucroDia = 0;
-
   let pix = 0;
-
   let dinheiro = 0;
-
   let cartao = 0;
 
   vendas.forEach(v=>{
 
     totalDia += v.total;
-
     lucroDia += v.lucro;
 
     if(v.pagamento === "Pix")
@@ -714,6 +706,33 @@ function render(){
     if(v.pagamento === "Cartão")
       cartao += v.total;
   });
+
+  let resumoProdutos = {};
+
+  vendas.forEach(v=>{
+
+    if(v.itens){
+
+      v.itens.forEach(item=>{
+
+        if(!resumoProdutos[item.nome]){
+
+          resumoProdutos[item.nome] = 0;
+        }
+
+        resumoProdutos[item.nome]++;
+      });
+    }
+  });
+
+  let produtosHTML = "";
+
+  for(let nome in resumoProdutos){
+
+    produtosHTML += `
+      ${nome}: ${resumoProdutos[nome]} vendidos<br>
+    `;
+  }
 
   document.getElementById(
     "relatorio"
@@ -735,7 +754,13 @@ function render(){
     R$ ${cartao.toFixed(2)}<br><br>
 
     🧾 Total vendas:
-    ${vendas.length}
+    ${vendas.length}<br><br>
+
+    <hr>
+
+    <h3>🔥 Produtos mais vendidos</h3>
+
+    ${produtosHTML || "Nenhum produto vendido"}
 
   `;
 }
