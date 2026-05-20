@@ -1,70 +1,292 @@
-<!-- SUBSTITUA SOMENTE ESSAS FUNÇÕES NO SEU CÓDIGO -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cafeteira Lá de Casa</title>
+
+<style>
+
+body{
+  font-family:Arial;
+  background:#ffe6f0;
+  margin:0;
+}
+
+header{
+  background:#d81b60;
+  color:white;
+  padding:15px;
+  text-align:center;
+  position:relative;
+  font-size:22px;
+}
+
+.settings-btn{
+  position:absolute;
+  right:15px;
+  top:10px;
+  background:white;
+  color:#d81b60;
+  border:none;
+  padding:8px 12px;
+  border-radius:50%;
+  cursor:pointer;
+  font-size:18px;
+}
+
+.container{
+  display:flex;
+  gap:20px;
+  padding:20px;
+  flex-wrap:wrap;
+}
+
+.box{
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  flex:1;
+  min-width:320px;
+}
+
+input,select{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+  border-radius:5px;
+  border:1px solid #ccc;
+  box-sizing:border-box;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  border:none;
+  border-radius:5px;
+  background:#d81b60;
+  color:white;
+  cursor:pointer;
+}
+
+.produto{
+  background:#f8bbd0;
+  padding:10px;
+  margin:5px 0;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+.categoria{
+  background:#d81b60;
+  color:white;
+  padding:10px;
+  border-radius:5px;
+  margin-top:15px;
+  cursor:pointer;
+}
+
+.admin{
+  display:none;
+}
+
+.total{
+  font-size:22px;
+  font-weight:bold;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+☕ Cafeteira Lá de Casa
+
+<button class="settings-btn"
+onclick="toggleAdmin()">
+
+⚙
+
+</button>
+
+</header>
+
+<div class="container">
+
+<!-- ADMIN -->
+<div class="box admin" id="adminBox">
+
+<h2>⚙ Painel Admin</h2>
+
+<input id="novaCategoria"
+placeholder="Nova categoria">
+
+<button onclick="criarCategoria()">
+Criar Categoria
+</button>
+
+<hr>
+
+<input id="nome"
+placeholder="Nome produto">
+
+<input id="preco"
+type="number"
+placeholder="Preço venda">
+
+<input id="custo"
+type="number"
+placeholder="Custo">
+
+<input id="estoque"
+type="number"
+placeholder="Estoque">
+
+<select id="categoriaSelect"></select>
+
+<button onclick="addProduto()">
+Adicionar Produto
+</button>
+
+<hr>
+
+<div id="listaAdmin"></div>
+
+<hr>
+
+<h3>💰 Relatório</h3>
+
+<div id="relatorio"></div>
+
+<button onclick="resetarCaixa()">
+Resetar Caixa do Dia
+</button>
+
+</div>
+
+<!-- LOJA -->
+<div class="box">
+
+<h2>🛒 Caixa</h2>
+
+<input
+id="pesquisa"
+placeholder="Pesquisar produto..."
+onkeyup="pesquisarProdutos()"
+>
+
+<div id="resultadoPesquisa"></div>
+
+<div id="loja"></div>
+
+<hr>
+
+<select id="pagamento">
+<option>Pix</option>
+<option>Dinheiro</option>
+<option>Cartão</option>
+</select>
+
+<hr>
+
+<h3>Carrinho</h3>
+
+<div id="carrinho"></div>
+
+<p class="total">
+R$ <span id="total">0.00</span>
+</p>
+
+<p>
+Lucro:
+R$ <span id="lucro">0.00</span>
+</p>
+
+<button onclick="finalizarVenda()">
+Finalizar Venda
+</button>
+
+</div>
+
+</div>
 
 <script>
 
-// PESQUISA MELHORADA
-function pesquisarProdutos(){
+let categorias =
+JSON.parse(localStorage.getItem("categorias")) || [];
 
-  let pesquisa =
-  document.getElementById("pesquisa")
-  .value
-  .toLowerCase()
-  .trim();
+let produtos =
+JSON.parse(localStorage.getItem("produtos")) || [];
 
-  let resultados = "";
+let vendas =
+JSON.parse(localStorage.getItem("vendas")) || [];
 
-  if(pesquisa === ""){
+let abertas =
+JSON.parse(localStorage.getItem("abertas")) || {};
 
-    document.getElementById(
-      "resultadoPesquisa"
-    ).innerHTML = "";
+let carrinho = [];
 
-    return;
-  }
+let total = 0;
 
-  let encontrados = produtos.filter(p =>
-    p.nome.toLowerCase().includes(pesquisa)
+let lucro = 0;
+
+function salvar(){
+
+  localStorage.setItem(
+    "categorias",
+    JSON.stringify(categorias)
   );
 
-  encontrados.forEach((p)=>{
+  localStorage.setItem(
+    "produtos",
+    JSON.stringify(produtos)
+  );
 
-    resultados += `
-      <div
-      class="produto"
-      onclick="adicionarCarrinho(${produtos.indexOf(p)})">
+  localStorage.setItem(
+    "vendas",
+    JSON.stringify(vendas)
+  );
 
-      🔍 ${p.nome}<br>
-
-      💰 R$ ${p.preco.toFixed(2)}<br>
-
-      📦 Estoque: ${p.qtd}
-
-      </div>
-    `;
-  });
-
-  if(encontrados.length <= 0){
-
-    resultados = `
-      <div class="produto">
-      Nenhum produto encontrado
-      </div>
-    `;
-  }
-
-  document.getElementById(
-    "resultadoPesquisa"
-  ).innerHTML = resultados;
+  localStorage.setItem(
+    "abertas",
+    JSON.stringify(abertas)
+  );
 }
 
-// APAGAR CATEGORIA
+function toggleAdmin(){
+
+  let admin =
+  document.getElementById("adminBox");
+
+  admin.style.display =
+  admin.style.display === "none"
+  ? "block"
+  : "none";
+}
+
+function criarCategoria(){
+
+  let nome =
+  document.getElementById("novaCategoria")
+  .value.trim();
+
+  if(!nome) return;
+
+  categorias.push(nome);
+
+  salvar();
+
+  render();
+
+  document.getElementById(
+    "novaCategoria"
+  ).value = "";
+}
+
 function apagarCategoria(nome){
-
-  let confirmar = confirm(
-    "Apagar categoria e todos os produtos?"
-  );
-
-  if(!confirmar) return;
 
   categorias =
   categorias.filter(c => c !== nome);
@@ -77,4 +299,380 @@ function apagarCategoria(nome){
   render();
 }
 
+function addProduto(){
+
+  let nome =
+  document.getElementById("nome").value;
+
+  let preco =
+  parseFloat(
+    document.getElementById("preco").value
+  );
+
+  let custo =
+  parseFloat(
+    document.getElementById("custo").value
+  );
+
+  let estoque =
+  parseInt(
+    document.getElementById("estoque").value
+  );
+
+  let categoria =
+  document.getElementById(
+    "categoriaSelect"
+  ).value;
+
+  produtos.push({
+    nome,
+    preco,
+    custo,
+    qtd:estoque,
+    categoria
+  });
+
+  salvar();
+
+  render();
+}
+
+function apagarProduto(i){
+
+  produtos.splice(i,1);
+
+  salvar();
+
+  render();
+}
+
+function maisEstoque(i){
+
+  produtos[i].qtd++;
+
+  salvar();
+
+  render();
+}
+
+function adicionarCarrinho(i){
+
+  if(produtos[i].qtd <= 0){
+
+    alert("Sem estoque");
+
+    return;
+  }
+
+  carrinho.push(produtos[i]);
+
+  produtos[i].qtd--;
+
+  total += produtos[i].preco;
+
+  lucro += (
+    produtos[i].preco -
+    produtos[i].custo
+  );
+
+  salvar();
+
+  atualizarCarrinho();
+
+  render();
+}
+
+function atualizarCarrinho(){
+
+  let html = "";
+
+  carrinho.forEach((p)=>{
+
+    html += `
+      <div>
+      ${p.nome} - R$ ${p.preco}
+      </div>
+    `;
+  });
+
+  document.getElementById(
+    "carrinho"
+  ).innerHTML = html;
+
+  document.getElementById(
+    "total"
+  ).innerText = total.toFixed(2);
+
+  document.getElementById(
+    "lucro"
+  ).innerText = lucro.toFixed(2);
+}
+
+function finalizarVenda(){
+
+  if(carrinho.length <= 0){
+
+    alert("Carrinho vazio");
+
+    return;
+  }
+
+  let pagamento =
+  document.getElementById(
+    "pagamento"
+  ).value;
+
+  vendas.push({
+    total,
+    lucro,
+    pagamento,
+    data:new Date().toLocaleString()
+  });
+
+  salvar();
+
+  carrinho = [];
+
+  total = 0;
+
+  lucro = 0;
+
+  atualizarCarrinho();
+
+  render();
+
+  alert("Venda finalizada!");
+}
+
+function resetarCaixa(){
+
+  vendas = [];
+
+  salvar();
+
+  render();
+
+  alert("Caixa resetado");
+}
+
+function pesquisarProdutos(){
+
+  let pesquisa =
+  document.getElementById(
+    "pesquisa"
+  ).value.toLowerCase();
+
+  let html = "";
+
+  if(pesquisa === ""){
+
+    document.getElementById(
+      "resultadoPesquisa"
+    ).innerHTML = "";
+
+    return;
+  }
+
+  let encontrados =
+  produtos.filter(p =>
+    p.nome.toLowerCase()
+    .includes(pesquisa)
+  );
+
+  encontrados.forEach((p)=>{
+
+    html += `
+      <div class="produto"
+      onclick="adicionarCarrinho(${produtos.indexOf(p)})">
+
+      🔍 ${p.nome}<br>
+
+      💰 R$ ${p.preco}<br>
+
+      📦 ${p.qtd}
+
+      </div>
+    `;
+  });
+
+  document.getElementById(
+    "resultadoPesquisa"
+  ).innerHTML = html;
+}
+
+function toggleCategoria(nome){
+
+  abertas[nome] = !abertas[nome];
+
+  salvar();
+
+  render();
+}
+
+function render(){
+
+  // SELECT
+  let selectHTML = "";
+
+  categorias.forEach((c)=>{
+
+    selectHTML += `
+      <option>${c}</option>
+    `;
+  });
+
+  document.getElementById(
+    "categoriaSelect"
+  ).innerHTML = selectHTML;
+
+  // LOJA
+  let lojaHTML = "";
+
+  categorias.forEach((categoria)=>{
+
+    lojaHTML += `
+      <div class="categoria"
+      onclick="toggleCategoria('${categoria}')">
+
+      ${categoria}
+
+      <button
+      onclick="event.stopPropagation();
+      apagarCategoria('${categoria}')">
+
+      🗑
+
+      </button>
+
+      </div>
+    `;
+
+    if(abertas[categoria]){
+
+      produtos
+      .filter(p =>
+        p.categoria === categoria
+      )
+
+      .forEach((p)=>{
+
+        lojaHTML += `
+          <div class="produto"
+          onclick="adicionarCarrinho(${produtos.indexOf(p)})">
+
+          ${p.nome}<br>
+
+          💰 R$ ${p.preco}<br>
+
+          📦 ${p.qtd}
+
+          </div>
+        `;
+      });
+    }
+  });
+
+  document.getElementById(
+    "loja"
+  ).innerHTML = lojaHTML;
+
+  // ADMIN
+  let adminHTML = "";
+
+  produtos.forEach((p)=>{
+
+    adminHTML += `
+      <div class="produto">
+
+      <b>${p.nome}</b><br>
+
+      📁 ${p.categoria}<br>
+
+      💰 Venda:
+      R$ ${p.preco}<br>
+
+      🧾 Custo:
+      R$ ${p.custo}<br>
+
+      📦 ${p.qtd}<br><br>
+
+      <button
+      onclick="maisEstoque(${produtos.indexOf(p)})">
+
+      + Estoque
+
+      </button>
+
+      <button
+      onclick="apagarProduto(${produtos.indexOf(p)})">
+
+      🗑 Apagar
+
+      </button>
+
+      </div>
+    `;
+  });
+
+  document.getElementById(
+    "listaAdmin"
+  ).innerHTML = adminHTML;
+
+  // RELATÓRIO
+  let totalDia = 0;
+
+  let lucroDia = 0;
+
+  let pix = 0;
+
+  let dinheiro = 0;
+
+  let cartao = 0;
+
+  vendas.forEach(v=>{
+
+    totalDia += v.total;
+
+    lucroDia += v.lucro;
+
+    if(v.pagamento === "Pix")
+      pix += v.total;
+
+    if(v.pagamento === "Dinheiro")
+      dinheiro += v.total;
+
+    if(v.pagamento === "Cartão")
+      cartao += v.total;
+  });
+
+  document.getElementById(
+    "relatorio"
+  ).innerHTML = `
+
+    💰 Vendas:
+    R$ ${totalDia.toFixed(2)}<br><br>
+
+    📈 Lucro:
+    R$ ${lucroDia.toFixed(2)}<br><br>
+
+    💳 Pix:
+    R$ ${pix.toFixed(2)}<br>
+
+    💵 Dinheiro:
+    R$ ${dinheiro.toFixed(2)}<br>
+
+    💳 Cartão:
+    R$ ${cartao.toFixed(2)}<br><br>
+
+    🧾 Total vendas:
+    ${vendas.length}
+
+  `;
+}
+
+render();
+
 </script>
+
+</body>
+</html>
