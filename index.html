@@ -436,15 +436,60 @@ function adicionarCarrinho(i){
   render();
 }
 
+function removerCarrinho(index){
+
+  let produto = carrinho[index];
+
+  total -= produto.preco;
+
+  lucro -= (
+    produto.preco -
+    produto.custo
+  );
+
+  produtos.forEach((p)=>{
+
+    if(
+      p.nome === produto.nome &&
+      p.categoria === produto.categoria
+    ){
+
+      p.qtd++;
+
+    }
+  });
+
+  carrinho.splice(index,1);
+
+  salvar();
+
+  atualizarCarrinho();
+
+  render();
+}
+
 function atualizarCarrinho(){
 
   let html = "";
 
-  carrinho.forEach((p)=>{
+  carrinho.forEach((p,index)=>{
 
     html += `
-      <div>
+      <div class="produto">
+
       ${p.nome} - R$ ${p.preco}
+
+      <button
+      style="
+      margin-top:8px;
+      background:#ff5252;
+      "
+      onclick="removerCarrinho(${index})">
+
+      ❌ Remover
+
+      </button>
+
       </div>
     `;
   });
