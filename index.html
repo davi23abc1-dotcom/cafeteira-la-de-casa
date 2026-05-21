@@ -7,123 +7,189 @@
 
 <style>
 
+*{
+  box-sizing:border-box;
+}
+
 body{
-  font-family:Arial;
-  background:#ffe6f0;
   margin:0;
+  font-family:Arial;
+  background:#fff0f5;
+  height:100vh;
+  overflow:hidden;
 }
 
 header{
   background:#d81b60;
   color:white;
-  padding:15px;
-  text-align:center;
-  position:relative;
+  padding:12px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
   font-size:22px;
+  height:60px;
 }
 
 .settings-btn{
-  position:absolute;
-  right:15px;
-  top:10px;
   background:white;
   color:#d81b60;
   border:none;
   width:40px;
   height:40px;
   border-radius:50%;
-  cursor:pointer;
   font-size:18px;
+  cursor:pointer;
 }
 
-.container{
+.main{
   display:flex;
-  gap:20px;
-  padding:20px;
-  flex-wrap:wrap;
+  height:calc(100vh - 60px);
 }
 
-.box{
+.sidebar{
+  width:260px;
   background:white;
+  border-right:2px solid #f3c1d6;
   padding:15px;
-  border-radius:10px;
+  overflow:auto;
+}
+
+.content{
   flex:1;
-  min-width:320px;
+  display:flex;
+  flex-direction:column;
+  padding:15px;
+  gap:10px;
 }
 
-input,select{
-  width:100%;
+.topbar{
+  display:flex;
+  gap:10px;
+}
+
+.topbar input,
+.topbar select{
   padding:10px;
-  margin:5px 0;
-  border-radius:5px;
+  border-radius:8px;
   border:1px solid #ccc;
-  box-sizing:border-box;
 }
 
-button{
-  width:100%;
-  padding:10px;
-  margin-top:5px;
-  border:none;
-  border-radius:5px;
-  background:#d81b60;
-  color:white;
-  cursor:pointer;
+.topbar input{
+  flex:1;
 }
 
-.produto{
-  background:#f8bbd0;
-  padding:10px;
-  margin:5px 0;
-  border-radius:5px;
-  cursor:pointer;
-}
-
-.produto:hover{
-  background:#f48fb1;
-}
-
-.admin{
-  display:none;
-}
-
-.categorias-grid{
+.categorias{
   display:flex;
   flex-wrap:wrap;
-  gap:10px;
+  gap:8px;
+  overflow:auto;
+  max-height:180px;
 }
 
 .categoria{
   background:#d81b60;
   color:white;
-  padding:8px 10px;
+  padding:8px 12px;
   border-radius:8px;
   cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  width:180px;
   font-size:14px;
-  font-weight:bold;
-  box-sizing:border-box;
 }
 
 .categoria.ativa{
   background:#880e4f;
 }
 
-.btn-excluir-cat{
-  background:#ff5252;
-  width:auto;
-  padding:3px 8px;
-  font-size:12px;
-  border-radius:5px;
-  margin-left:10px;
+.produtos{
+  flex:1;
+  overflow:auto;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:10px;
 }
 
-.total{
-  font-size:22px;
-  font-weight:bold;
+.produto{
+  background:white;
+  border-radius:10px;
+  padding:10px;
+  border:2px solid #f8bbd0;
+  cursor:pointer;
+}
+
+.produto:hover{
+  background:#ffe6f0;
+}
+
+.carrinho{
+  background:white;
+  border-top:2px solid #f3c1d6;
+  padding:10px;
+  max-height:260px;
+  overflow:auto;
+}
+
+.item-carrinho{
+  background:#ffe6f0;
+  padding:8px;
+  border-radius:8px;
+  margin-bottom:8px;
+}
+
+button{
+  border:none;
+  border-radius:8px;
+  padding:8px;
+  cursor:pointer;
+}
+
+.btn-remover{
+  background:#ff5252;
+  color:white;
+  margin-top:5px;
+  width:100%;
+}
+
+.btn-finalizar{
+  background:#d81b60;
+  color:white;
+  width:100%;
+  margin-top:10px;
+  padding:12px;
+  font-size:16px;
+}
+
+.btn-cancelar{
+  background:#757575;
+  color:white;
+  width:100%;
+  margin-top:5px;
+}
+
+.admin{
+  display:none;
+}
+
+.admin input,
+.admin select{
+  width:100%;
+  padding:10px;
+  margin-bottom:8px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+.admin button{
+  width:100%;
+  background:#d81b60;
+  color:white;
+  margin-bottom:8px;
+}
+
+.resumo{
+  background:#ffe6f0;
+  padding:10px;
+  border-radius:10px;
+  margin-top:10px;
+  font-size:14px;
 }
 
 </style>
@@ -144,15 +210,14 @@ onclick="toggleAdmin()">
 
 </header>
 
-<div class="container">
+<div class="main">
 
 <!-- ADMIN -->
-<div class="box admin" id="adminBox">
+<div class="sidebar admin" id="adminBox">
 
-<h2>⚙ Painel Admin</h2>
+<h3>⚙ Painel</h3>
 
-<input
-id="novaCategoria"
+<input id="novaCategoria"
 placeholder="Nova categoria">
 
 <button onclick="criarCategoria()">
@@ -161,22 +226,18 @@ Criar Categoria
 
 <hr>
 
-<input
-id="nome"
-placeholder="Nome produto">
+<input id="nome"
+placeholder="Produto">
 
-<input
-id="preco"
+<input id="preco"
 type="number"
-placeholder="Preço venda">
+placeholder="Preço">
 
-<input
-id="custo"
+<input id="custo"
 type="number"
 placeholder="Custo">
 
-<input
-id="estoque"
+<input id="estoque"
 type="number"
 placeholder="Estoque">
 
@@ -189,39 +250,31 @@ Adicionar Produto
 <hr>
 
 <button onclick="toggleProdutosAdmin()">
-📦 Mostrar / Ocultar Produtos
+📦 Produtos
 </button>
 
 <div id="listaAdmin"></div>
 
 <hr>
 
-<h3>💰 Relatório</h3>
-
-<div id="relatorio"></div>
+<div class="resumo"
+id="relatorio"></div>
 
 <button onclick="resetarCaixa()">
-Resetar Caixa do Dia
+Resetar Caixa
 </button>
 
 </div>
 
-<!-- LOJA -->
-<div class="box">
+<!-- SISTEMA -->
+<div class="content">
 
-<h2>🛒 Caixa</h2>
+<div class="topbar">
 
 <input
 id="pesquisa"
 placeholder="Pesquisar produto..."
-onkeyup="pesquisarProdutos()"
->
-
-<div id="resultadoPesquisa"></div>
-
-<div id="loja"></div>
-
-<hr>
+onkeyup="pesquisarProdutos()">
 
 <select id="pagamento">
 <option>Pix</option>
@@ -229,32 +282,46 @@ onkeyup="pesquisarProdutos()"
 <option>Cartão</option>
 </select>
 
-<hr>
+</div>
 
-<h3>Carrinho</h3>
+<div class="categorias"
+id="loja"></div>
 
-<button
-style="background:#757575;"
-onclick="cancelarVenda()">
+<div class="produtos"
+id="resultadoPesquisa"></div>
 
-❌ Cancelar Venda
+<div class="carrinho">
 
-</button>
+<h3>🛒 Carrinho</h3>
 
 <div id="carrinho"></div>
 
-<p class="total">
+<h2>
 R$ <span id="total">0.00</span>
-</p>
+</h2>
 
 <p>
 Lucro:
 R$ <span id="lucro">0.00</span>
 </p>
 
-<button onclick="finalizarVenda()">
-Finalizar Venda
+<button
+class="btn-cancelar"
+onclick="cancelarVenda()">
+
+❌ Cancelar Venda
+
 </button>
+
+<button
+class="btn-finalizar"
+onclick="finalizarVenda()">
+
+Finalizar Venda
+
+</button>
+
+</div>
 
 </div>
 
@@ -271,10 +338,9 @@ JSON.parse(localStorage.getItem("produtos")) || [];
 let vendas =
 JSON.parse(localStorage.getItem("vendas")) || [];
 
-let abertas =
-JSON.parse(localStorage.getItem("abertas")) || {};
-
 let carrinho = [];
+
+let abertas = {};
 
 let total = 0;
 
@@ -284,591 +350,473 @@ let adminProdutosVisivel = false;
 
 function salvar(){
 
-  localStorage.setItem(
-    "categorias",
-    JSON.stringify(categorias)
-  );
+localStorage.setItem(
+"categorias",
+JSON.stringify(categorias)
+);
 
-  localStorage.setItem(
-    "produtos",
-    JSON.stringify(produtos)
-  );
+localStorage.setItem(
+"produtos",
+JSON.stringify(produtos)
+);
 
-  localStorage.setItem(
-    "vendas",
-    JSON.stringify(vendas)
-  );
+localStorage.setItem(
+"vendas",
+JSON.stringify(vendas)
+);
 
-  localStorage.setItem(
-    "abertas",
-    JSON.stringify(abertas)
-  );
 }
 
 function toggleAdmin(){
 
-  let admin =
-  document.getElementById("adminBox");
+let admin =
+document.getElementById("adminBox");
 
-  if(admin.style.display === "block"){
-
-    admin.style.display = "none";
-
-  }else{
-
-    admin.style.display = "block";
-  }
-}
-
-function toggleProdutosAdmin(){
-
-  adminProdutosVisivel =
-  !adminProdutosVisivel;
-
-  render();
+admin.style.display =
+admin.style.display === "block"
+? "none"
+: "block";
 }
 
 function criarCategoria(){
 
-  let nome =
-  document.getElementById("novaCategoria")
-  .value.trim();
+let nome =
+document.getElementById(
+"novaCategoria"
+).value;
 
-  if(!nome) return;
+if(!nome) return;
 
-  categorias.push(nome);
+categorias.push(nome);
 
-  salvar();
+salvar();
 
-  render();
-
-  document.getElementById(
-    "novaCategoria"
-  ).value = "";
+render();
 }
 
 function apagarCategoria(nome){
 
-  let confirmar =
-  confirm("Excluir categoria?");
+categorias =
+categorias.filter(c=>c!==nome);
 
-  if(!confirmar) return;
+produtos =
+produtos.filter(
+p=>p.categoria!==nome
+);
 
-  categorias =
-  categorias.filter(c => c !== nome);
+salvar();
 
-  produtos =
-  produtos.filter(p =>
-    p.categoria !== nome
-  );
-
-  salvar();
-
-  render();
+render();
 }
 
 function addProduto(){
 
-  let nome =
-  document.getElementById("nome").value;
+let nome =
+document.getElementById("nome").value;
 
-  let preco =
-  parseFloat(
-    document.getElementById("preco").value
-  );
+let preco =
+parseFloat(
+document.getElementById("preco").value
+);
 
-  let custo =
-  parseFloat(
-    document.getElementById("custo").value
-  );
+let custo =
+parseFloat(
+document.getElementById("custo").value
+);
 
-  let estoque =
-  parseInt(
-    document.getElementById("estoque").value
-  );
+let estoque =
+parseInt(
+document.getElementById("estoque").value
+);
 
-  let categoria =
-  document.getElementById(
-    "categoriaSelect"
-  ).value;
+let categoria =
+document.getElementById(
+"categoriaSelect"
+).value;
 
-  if(!nome || !preco || !custo || !estoque){
+if(!nome || !preco || !estoque)
+return;
 
-    alert("Preencha tudo");
+produtos.push({
+nome,
+preco,
+custo,
+qtd:estoque,
+categoria
+});
 
-    return;
-  }
+salvar();
 
-  produtos.push({
-    nome,
-    preco,
-    custo,
-    qtd:estoque,
-    categoria
-  });
-
-  salvar();
-
-  render();
-
-  document.getElementById("nome").value = "";
-  document.getElementById("preco").value = "";
-  document.getElementById("custo").value = "";
-  document.getElementById("estoque").value = "";
+render();
 }
 
 function apagarProduto(i){
 
-  produtos.splice(i,1);
+produtos.splice(i,1);
 
-  salvar();
+salvar();
 
-  render();
+render();
 }
 
-function maisEstoque(i){
+function toggleProdutosAdmin(){
 
-  produtos[i].qtd++;
+adminProdutosVisivel =
+!adminProdutosVisivel;
 
-  salvar();
+render();
+}
 
-  render();
+function abrirCategoria(nome){
+
+abertas[nome] =
+!abertas[nome];
+
+render();
 }
 
 function adicionarCarrinho(i){
 
-  if(produtos[i].qtd <= 0){
+if(produtos[i].qtd<=0){
 
-    alert("Sem estoque");
+alert("Sem estoque");
 
-    return;
-  }
+return;
+}
 
-  carrinho.push(produtos[i]);
+produtos[i].qtd--;
 
-  produtos[i].qtd--;
+carrinho.push(produtos[i]);
 
-  total += produtos[i].preco;
+total += produtos[i].preco;
 
-  lucro += (
-    produtos[i].preco -
-    produtos[i].custo
-  );
+lucro += (
+produtos[i].preco -
+produtos[i].custo
+);
 
-  salvar();
+salvar();
 
-  atualizarCarrinho();
+atualizarCarrinho();
 
-  render();
+render();
 }
 
 function removerCarrinho(index){
 
-  let produto = carrinho[index];
+let produto =
+carrinho[index];
 
-  total -= produto.preco;
+produto.qtd++;
 
-  lucro -= (
-    produto.preco -
-    produto.custo
-  );
+total -= produto.preco;
 
-  produtos.forEach((p)=>{
+lucro -= (
+produto.preco -
+produto.custo
+);
 
-    if(
-      p.nome === produto.nome &&
-      p.categoria === produto.categoria
-    ){
+carrinho.splice(index,1);
 
-      p.qtd++;
+salvar();
 
-    }
-  });
+atualizarCarrinho();
 
-  carrinho.splice(index,1);
-
-  salvar();
-
-  atualizarCarrinho();
-
-  render();
+render();
 }
 
 function cancelarVenda(){
 
-  carrinho.forEach((produto)=>{
+carrinho.forEach((p)=>{
 
-    produtos.forEach((p)=>{
+p.qtd++;
 
-      if(
-        p.nome === produto.nome &&
-        p.categoria === produto.categoria
-      ){
+});
 
-        p.qtd++;
-      }
-    });
-  });
+carrinho = [];
 
-  carrinho = [];
+total = 0;
 
-  total = 0;
+lucro = 0;
 
-  lucro = 0;
+atualizarCarrinho();
 
-  salvar();
-
-  atualizarCarrinho();
-
-  render();
-
-  alert("Venda cancelada");
+render();
 }
 
 function atualizarCarrinho(){
 
-  let html = "";
+let html = "";
 
-  carrinho.forEach((p,index)=>{
+carrinho.forEach((p,index)=>{
 
-    html += `
-      <div class="produto">
+html += `
 
-      ${p.nome} - R$ ${p.preco}
+<div class="item-carrinho">
 
-      <button
-      style="
-      margin-top:8px;
-      background:#ff5252;
-      "
-      onclick="removerCarrinho(${index})">
+${p.nome}
+- R$ ${p.preco}
 
-      ❌ Remover
+<button
+class="btn-remover"
+onclick="removerCarrinho(${index})">
 
-      </button>
+Remover
 
-      </div>
-    `;
-  });
+</button>
 
-  document.getElementById(
-    "carrinho"
-  ).innerHTML = html;
+</div>
 
-  document.getElementById(
-    "total"
-  ).innerText = total.toFixed(2);
+`;
+});
 
-  document.getElementById(
-    "lucro"
-  ).innerText = lucro.toFixed(2);
+document.getElementById(
+"carrinho"
+).innerHTML = html;
+
+document.getElementById(
+"total"
+).innerText =
+total.toFixed(2);
+
+document.getElementById(
+"lucro"
+).innerText =
+lucro.toFixed(2);
 }
 
 function finalizarVenda(){
 
-  if(carrinho.length <= 0){
+if(carrinho.length<=0){
 
-    alert("Carrinho vazio");
+alert("Carrinho vazio");
 
-    return;
-  }
+return;
+}
 
-  let pagamento =
-  document.getElementById(
-    "pagamento"
-  ).value;
+let pagamento =
+document.getElementById(
+"pagamento"
+).value;
 
-  vendas.push({
-    itens:[...carrinho],
-    total,
-    lucro,
-    pagamento,
-    data:new Date().toLocaleString()
-  });
+vendas.push({
+itens:[...carrinho],
+total,
+lucro,
+pagamento,
+data:new Date()
+.toLocaleString()
+});
 
-  salvar();
+salvar();
 
-  carrinho = [];
+carrinho = [];
 
-  total = 0;
+total = 0;
 
-  lucro = 0;
+lucro = 0;
 
-  atualizarCarrinho();
+atualizarCarrinho();
 
-  render();
+render();
 
-  alert("Venda finalizada!");
+alert("Venda finalizada");
 }
 
 function resetarCaixa(){
 
-  let confirmar =
-  confirm("Resetar caixa?");
+if(!confirm("Resetar caixa?"))
+return;
 
-  if(!confirmar) return;
+vendas = [];
 
-  vendas = [];
+salvar();
 
-  salvar();
-
-  render();
-
-  alert("Caixa resetado");
+render();
 }
 
 function pesquisarProdutos(){
 
-  let pesquisa =
-  document.getElementById(
-    "pesquisa"
-  ).value.toLowerCase();
+let pesquisa =
+document.getElementById(
+"pesquisa"
+).value.toLowerCase();
 
-  let html = "";
+let html = "";
 
-  if(pesquisa === ""){
+produtos
+.filter(p=>
+p.nome.toLowerCase()
+.includes(pesquisa)
+)
 
-    document.getElementById(
-      "resultadoPesquisa"
-    ).innerHTML = "";
+.forEach((p)=>{
 
-    return;
-  }
+html += `
 
-  let encontrados =
-  produtos.filter(p =>
-    p.nome.toLowerCase()
-    .includes(pesquisa)
-  );
+<div
+class="produto"
+onclick="adicionarCarrinho(${produtos.indexOf(p)})">
 
-  encontrados.forEach((p)=>{
+<b>${p.nome}</b><br>
 
-    html += `
-      <div class="produto"
-      onclick="adicionarCarrinho(${produtos.indexOf(p)})">
+💰 R$ ${p.preco}<br>
 
-      🔍 ${p.nome}<br>
+📦 ${p.qtd}
 
-      💰 R$ ${p.preco}<br>
+</div>
 
-      📦 ${p.qtd}
+`;
+});
 
-      </div>
-    `;
-  });
-
-  document.getElementById(
-    "resultadoPesquisa"
-  ).innerHTML = html;
-}
-
-function toggleCategoria(nome){
-
-  abertas[nome] = !abertas[nome];
-
-  salvar();
-
-  render();
+document.getElementById(
+"resultadoPesquisa"
+).innerHTML = html;
 }
 
 function render(){
 
-  let selectHTML = "";
+let categoriasHTML = "";
 
-  categorias.forEach((c)=>{
+categorias.forEach((c)=>{
 
-    selectHTML += `
-      <option>${c}</option>
-    `;
-  });
+categoriasHTML += `
 
-  document.getElementById(
-    "categoriaSelect"
-  ).innerHTML = selectHTML;
+<div
+class="categoria
+${abertas[c] ? 'ativa' : ''}"
+onclick="abrirCategoria('${c}')">
 
-  let lojaHTML = `
-    <div class="categorias-grid">
-  `;
+${c}
 
-  categorias.forEach((categoria)=>{
+</div>
 
-    lojaHTML += `
-      <div class="categoria
-      ${abertas[categoria] ? 'ativa' : ''}"
-      onclick="toggleCategoria('${categoria}')">
+`;
 
-      <span>${categoria}</span>
+if(abertas[c]){
 
-      <button
-      class="btn-excluir-cat"
-      onclick="event.stopPropagation();
-      apagarCategoria('${categoria}')">
+produtos
+.filter(p=>p.categoria===c)
+.forEach((p)=>{
 
-      ✖
+categoriasHTML += `
 
-      </button>
+<div
+class="produto"
+onclick="adicionarCarrinho(${produtos.indexOf(p)})">
 
-      </div>
-    `;
+<b>${p.nome}</b><br>
 
-    if(abertas[categoria]){
+💰 R$ ${p.preco}<br>
 
-      lojaHTML += `
-        <div style="width:100%;">
-      `;
+📦 ${p.qtd}
 
-      produtos
-      .filter(p =>
-        p.categoria === categoria
-      )
+</div>
 
-      .forEach((p)=>{
+`;
+});
+}
+});
 
-        lojaHTML += `
-          <div class="produto"
-          onclick="adicionarCarrinho(${produtos.indexOf(p)})">
+document.getElementById(
+"loja"
+).innerHTML = categoriasHTML;
 
-          <b>${p.nome}</b><br>
+let selectHTML = "";
 
-          💰 R$ ${p.preco}<br>
+categorias.forEach((c)=>{
 
-          📦 Estoque: ${p.qtd}
+selectHTML += `
+<option>${c}</option>
+`;
+});
 
-          </div>
-        `;
-      });
+document.getElementById(
+"categoriaSelect"
+).innerHTML = selectHTML;
 
-      lojaHTML += `</div>`;
-    }
-  });
+let adminHTML = "";
 
-  lojaHTML += `</div>`;
+if(adminProdutosVisivel){
 
-  document.getElementById(
-    "loja"
-  ).innerHTML = lojaHTML;
+produtos.forEach((p)=>{
 
-  let adminHTML = "";
+adminHTML += `
 
-  if(adminProdutosVisivel){
+<div class="produto">
 
-    produtos.forEach((p)=>{
+<b>${p.nome}</b><br>
 
-      adminHTML += `
-        <div class="produto">
+📁 ${p.categoria}<br>
 
-        <b>${p.nome}</b><br>
+💰 ${p.preco}<br>
 
-        📁 ${p.categoria}<br>
+📦 ${p.qtd}
 
-        💰 Venda:
-        R$ ${p.preco}<br>
+<button
+onclick="apagarProduto(${produtos.indexOf(p)})">
 
-        🧾 Custo:
-        R$ ${p.custo}<br>
+🗑 Apagar
 
-        📦 ${p.qtd}<br><br>
+</button>
 
-        <button
-        onclick="maisEstoque(${produtos.indexOf(p)})">
+</div>
 
-        + Estoque
+`;
+});
+}
 
-        </button>
+document.getElementById(
+"listaAdmin"
+).innerHTML = adminHTML;
 
-        <button
-        onclick="apagarProduto(${produtos.indexOf(p)})">
+let totalDia = 0;
 
-        🗑 Apagar
+let lucroDia = 0;
 
-        </button>
+let resumo = {};
 
-        </div>
-      `;
-    });
-  }
+vendas.forEach((v)=>{
 
-  document.getElementById(
-    "listaAdmin"
-  ).innerHTML = adminHTML;
+totalDia += v.total;
 
-  let totalDia = 0;
-  let lucroDia = 0;
-  let pix = 0;
-  let dinheiro = 0;
-  let cartao = 0;
+lucroDia += v.lucro;
 
-  vendas.forEach(v=>{
+v.itens.forEach((i)=>{
 
-    totalDia += v.total;
-    lucroDia += v.lucro;
+if(!resumo[i.nome]){
 
-    if(v.pagamento === "Pix")
-      pix += v.total;
+resumo[i.nome] = 0;
+}
 
-    if(v.pagamento === "Dinheiro")
-      dinheiro += v.total;
+resumo[i.nome]++;
+});
+});
 
-    if(v.pagamento === "Cartão")
-      cartao += v.total;
-  });
+let resumoHTML = "";
 
-  let resumoProdutos = {};
+for(let nome in resumo){
 
-  vendas.forEach(v=>{
+resumoHTML += `
+${nome}: ${resumo[nome]}<br>
+`;
+}
 
-    if(v.itens){
+document.getElementById(
+"relatorio"
+).innerHTML = `
 
-      v.itens.forEach(item=>{
+💰 Vendas:
+R$ ${totalDia.toFixed(2)}<br><br>
 
-        if(!resumoProdutos[item.nome]){
+📈 Lucro:
+R$ ${lucroDia.toFixed(2)}<br><br>
 
-          resumoProdutos[item.nome] = 0;
-        }
+🔥 Mais vendidos:<br>
 
-        resumoProdutos[item.nome]++;
-      });
-    }
-  });
+${resumoHTML || "Nenhuma venda"}
 
-  let produtosHTML = "";
-
-  for(let nome in resumoProdutos){
-
-    produtosHTML += `
-      ${nome}: ${resumoProdutos[nome]} vendidos<br>
-    `;
-  }
-
-  document.getElementById(
-    "relatorio"
-  ).innerHTML = `
-
-    💰 Vendas:
-    R$ ${totalDia.toFixed(2)}<br><br>
-
-    📈 Lucro:
-    R$ ${lucroDia.toFixed(2)}<br><br>
-
-    💳 Pix:
-    R$ ${pix.toFixed(2)}<br>
-
-    💵 Dinheiro:
-    R$ ${dinheiro.toFixed(2)}<br>
-
-    💳 Cartão:
-    R$ ${cartao.toFixed(2)}<br><br>
-
-    🧾 Total vendas:
-    ${vendas.length}<br><br>
-
-    <hr>
-
-    <h3>🔥 Produtos mais vendidos</h3>
-
-    ${produtosHTML || "Nenhum produto vendido"}
-
-  `;
+`;
 }
 
 render();
